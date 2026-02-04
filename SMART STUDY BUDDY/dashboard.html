@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Study Buddy — Dashboard</title>
+
+<!-- Load Dashboard CSS -->
+<link rel="stylesheet" href="dashboard.css">
+
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCEUVlcYdJGv4VuvmBQGWM58iBqIOwHHK0",
+    authDomain: "smart-study-buddy-7aaee.firebaseapp.com",
+    projectId: "smart-study-buddy-7aaee",
+    storageBucket: "smart-study-buddy-7aaee.firebasestorage.app",
+    messagingSenderId: "209590192791",
+    appId: "1:209590192791:web:0b2353c8f256b8b2a277d2"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      document.getElementById("userEmail").innerText = user.email;
+
+      const savedPDF = localStorage.getItem("studyPDFName");
+      document.getElementById("pdfName").innerText =
+        savedPDF ? savedPDF : "No PDF uploaded";
+    } else {
+      window.location.href = "index.html";
+    }
+  });
+
+  window.logoutUser = () => {
+    signOut(auth).then(() => {
+      localStorage.clear();
+      window.location.href = "index.html";
+    });
+  };
+</script>
+
+</head>
+
+<body>
+
+<h1 class="title">Smart Study Buddy</h1>
+<p class="subtitle">Your Intelligent Study Companion</p>
+
+<!-- TOP INFO BAR -->
+<div class="top-info">
+  <div>👤 <b id="userEmail">Loading...</b></div>
+  <div>📄 <b id="pdfName">Loading...</b></div>
+</div>
+
+<!-- DASHBOARD GRID -->
+<div class="dashboard-grid">
+
+  <div class="card" onclick="location.href='upload.html'">
+    <h3>📤 Upload PDF</h3>
+    <p>Import once → use everywhere</p>
+  </div>
+
+  <div class="card" onclick="location.href='upload_image.html'">
+    <h3>📷 Upload Image (OCR)</h3>
+    <p>Extract text from images</p>
+  </div>
+
+  <div class="card" onclick="location.href='flashcard_generator.html'">
+    <h3>📘 Flashcards</h3>
+    <p>Auto-Generated Study Cards</p>
+  </div>
+
+  <div class="card" onclick="location.href='quiz_generator.html'">
+    <h3>🧩 Quiz Generator</h3>
+    <p>Multiple-choice questions</p>
+  </div>
+
+  <div class="card" onclick="location.href='note_summarizer.html'">
+    <h3>📝 Summarizer</h3>
+    <p>Key points in seconds</p>
+  </div>
+
+  <div class="card" onclick="location.href='assistant.html'">
+    <h3>🤖 Study Assistant</h3>
+    <p>Ask questions from your PDF</p>
+  </div>
+
+  <div class="card" onclick="location.href='planner.html'">
+    <h3>🗓 Study Planner</h3>
+    <p>Organize your revision</p>
+  </div>
+
+  <div class="card" onclick="location.href='conceptmap.html'">
+    <h3>🧠 Concept Map</h3>
+    <p>Visual topic mapping</p>
+  </div>
+
+  <div class="card" onclick="location.href='vault.html'">
+    <h3>🏛 University Vault</h3>
+    <p>Research papers & resources</p>
+  </div>
+
+  <div class="card" onclick="location.href='studyquest.html'">
+    <h3>⭐ StudyQuest</h3>
+    <p>Your XP & Rewards</p>
+  </div>
+
+</div>
+
+<!-- LOGOUT BUTTON -->
+<button class="btn-logout" onclick="logoutUser()">Logout</button>
+
+<script src="xpbar.js"></script>
+<script src="emotion.js"></script>
+
+</body>
+</html>

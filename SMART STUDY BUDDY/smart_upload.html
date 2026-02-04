@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Study Buddy — PDF Upload</title>
+  <style>
+    /* --- BASIC PAGE STYLE --- */
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #e3f2fd, #fce4ec);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 40px;
+      color: #0b2447;
+    }
+
+    .container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+      padding: 40px;
+      width: 90%;
+      max-width: 800px;
+      text-align: center;
+    }
+
+    h1 {
+      color: #0b2447;
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: #555;
+      margin-bottom: 30px;
+    }
+
+    /* --- UPLOAD SECTION --- */
+    #uploadBtn {
+      background: #0b2447;
+      color: white;
+      padding: 12px 25px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: 0.3s;
+    }
+
+    #uploadBtn:hover {
+      background: #19376d;
+    }
+
+    #fileName {
+      margin-top: 15px;
+      font-weight: 500;
+    }
+
+    .progress-container {
+      width: 100%;
+      height: 10px;
+      background: #ddd;
+      border-radius: 5px;
+      margin: 20px 0;
+      overflow: hidden;
+    }
+
+    #progressBar {
+      height: 10px;
+      width: 0%;
+      background: linear-gradient(90deg, #4caf50, #6ad96a);
+      border-radius: 5px;
+      transition: width 0.1s ease-in-out;
+    }
+
+    /* --- POPUP --- */
+    .popup {
+      display: none;
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #4caf50;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-weight: 500;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      opacity: 0;
+      transition: opacity 0.3s, transform 0.3s;
+    }
+
+    .popup.show {
+      display: block;
+      opacity: 1;
+      transform: translateX(-50%) translateY(-10px);
+    }
+
+    /* --- AI FEATURES SECTION --- */
+    .hidden { display: none; }
+
+    #studyFeatures {
+      text-align: left;
+      margin-top: 40px;
+    }
+
+    .feature {
+      background: #f9f9ff;
+      margin-top: 20px;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .feature h3 {
+      color: #0b2447;
+      margin-bottom: 10px;
+    }
+
+    /* --- FLASHCARDS --- */
+    .card {
+      width: 180px;
+      height: 120px;
+      perspective: 1000px;
+      margin: 10px;
+      display: inline-block;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .card .front, .card .back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: #eaf0ff;
+      border-radius: 10px;
+      backface-visibility: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 500;
+      padding: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      transition: transform 0.6s;
+      text-align: center;
+    }
+
+    .card .back {
+      background: #cfe2ff;
+      transform: rotateY(180deg);
+    }
+
+    .card.flipped .front { transform: rotateY(180deg); }
+    .card.flipped .back { transform: rotateY(0deg); }
+
+    #startTestBtn {
+      background: #0b2447;
+      color: white;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    #startTestBtn:hover {
+      background: #19376d;
+    }
+
+    #testResult {
+      margin-top: 10px;
+      font-weight: 500;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📄 Upload Your Study PDF</h1>
+    <p>Once uploaded, Smart Study Buddy will automatically generate quizzes, flashcards, and a personalized study plan for you.</p>
+
+    <input type="file" id="pdfInput" accept="application/pdf" hidden>
+    <button id="uploadBtn">Choose PDF</button>
+    <p id="fileName">No file chosen</p>
+
+    <div class="progress-container">
+      <div id="progressBar"></div>
+    </div>
+
+    <div id="popup" class="popup">PDF uploaded successfully! 🎉</div>
+
+    <!-- AI FEATURES SECTION -->
+    <div id="studyFeatures" class="hidden">
+      <h2>AI-Generated Study Tools 📚</h2>
+
+      <div class="feature" id="quizSection">
+        <h3>Quiz Questions</h3>
+        <ul id="quizList"></ul>
+      </div>
+
+      <div class="feature" id="flashcardSection">
+        <h3>Flashcards</h3>
+        <div id="flashcards"></div>
+      </div>
+
+      <div class="feature" id="planSection">
+        <h3>Study Plan</h3>
+        <ul id="studyPlan"></ul>
+      </div>
+
+      <div class="feature" id="testSection">
+        <h3>Mini Test</h3>
+        <button id="startTestBtn">Start Test</button>
+        <div id="testResult"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const uploadBtn = document.getElementById('uploadBtn');
+    const pdfInput = document.getElementById('pdfInput');
+    const fileName = document.getElementById('fileName');
+    const progressBar = document.getElementById('progressBar');
+    const popup = document.getElementById('popup');
+
+    uploadBtn.addEventListener('click', () => pdfInput.click());
+
+    pdfInput.addEventListener('change', () => {
+      const file = pdfInput.files[0];
+      if (file) {
+        fileName.textContent = file.name;
+        simulateUpload();
+      }
+    });
+
+    function simulateUpload() {
+      let progress = 0;
+      progressBar.style.width = '0%';
+      popup.style.display = 'none';
+
+      const interval = setInterval(() => {
+        progress += 5;
+        progressBar.style.width = `${progress}%`;
+
+        if (progress >= 100) {
+          clearInterval(interval);
+          popup.classList.add('show');
+          setTimeout(() => popup.classList.remove('show'), 2000);
+          setTimeout(() => generateStudyFeatures(), 1500);
+        }
+      }, 100);
+    }
+
+    // --- Simulated AI-generated content ---
+    function generateStudyFeatures() {
+      const studyFeatures = document.getElementById('studyFeatures');
+      studyFeatures.classList.remove('hidden');
+
+      // Quiz questions
+      const quizData = [
+        'What are the key points discussed in this material?',
+        'Summarize the main idea in one sentence.',
+        'List two benefits or challenges mentioned.',
+        'Define one important concept from this document.'
+      ];
+      const quizList = document.getElementById('quizList');
+      quizList.innerHTML = quizData.map(q => `<li>❓ ${q}</li>`).join('');
+
+      // Flashcards
+      const flashcards = document.getElementById('flashcards');
+      const cardData = [
+        { front: 'What is Cloud Computing?', back: 'Delivery of computing services over the internet.' },
+        { front: 'Example of SaaS', back: 'Google Drive, Microsoft 365, Dropbox.' },
+        { front: 'Benefit of Automation', back: 'Reduces errors and increases efficiency.' },
+      ];
+      flashcards.innerHTML = cardData.map(c => `
+        <div class="card" onclick="this.classList.toggle('flipped')">
+          <div class="front">${c.front}</div>
+          <div class="back">${c.back}</div>
+        </div>
+      `).join('');
+
+      // Study plan
+      const plan = [
+        '📅 Day 1 – Read the uploaded PDF and note key concepts.',
+        '📅 Day 2 – Revise the generated flashcards.',
+        '📅 Day 3 – Attempt quiz questions.',
+        '📅 Day 4 – Take the mini test and review your weak areas.'
+      ];
+      document.getElementById('studyPlan').innerHTML = plan.map(p => `<li>${p}</li>`).join('');
+
+      // Mini test simulation
+      const testBtn = document.getElementById('startTestBtn');
+      const testResult = document.getElementById('testResult');
+      testBtn.onclick = () => {
+        testBtn.disabled = true;
+        testResult.textContent = "Evaluating your knowledge...";
+        setTimeout(() => {
+          testResult.textContent = "✅ You scored 8/10! Great progress, keep revising flashcards.";
+          testBtn.disabled = false;
+        }, 2000);
+      };
+    }
+  </script>
+  <script src="emotion.js"></script>
+
+</body>
+</html>

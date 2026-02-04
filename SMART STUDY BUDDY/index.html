@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Study Buddy — Login</title>
+  <link rel="stylesheet" href="style.css">
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { 
+      getAuth, 
+      createUserWithEmailAndPassword, 
+      signInWithEmailAndPassword,
+      sendPasswordResetEmail 
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc } 
+      from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCEUVlcYdJGv4VuvmBQGWM58iBqIOwHHK0",
+      authDomain: "smart-study-buddy-7aaee.firebaseapp.com",
+      projectId: "smart-study-buddy-7aaee",
+      storageBucket: "smart-study-buddy-7aaee.firebasestorage.app",
+      messagingSenderId: "209590192791",
+      appId: "1:209590192791:web:0b2353c8f256b8b2a277d2",
+      measurementId: "G-BQV7R19KJE"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    window.showForm = function(form) {
+      document.getElementById("signin").classList.add("hidden");
+      document.getElementById("signup").classList.add("hidden");
+      document.getElementById(form).classList.remove("hidden");
+    };
+
+    window.forgotPassword = async function() {
+      const email = prompt("Enter your registered email:");
+      if (!email) return;
+      try {
+        await sendPasswordResetEmail(auth, email);
+        alert("📩 Password reset link sent to " + email);
+      } catch (err) {
+        alert("❌ " + err.message);
+      }
+    };
+
+    document.addEventListener("DOMContentLoaded", () => {
+      // SIGN UP
+      document.getElementById("signup").addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const pw = e.target["password"].value;
+        const confirm = e.target["confirm"].value;
+        if (pw !== confirm) {
+          alert("❌ Passwords do not match.");
+          return;
+        }
+
+        const fullName = e.target["fullname"].value;
+        const dob = e.target["dob"].value;
+        const email = e.target["email"].value;
+        const university = e.target["university"].value;
+        const course = e.target["course"].value;
+        const gender = e.target["gender"].value;
+
+        try {
+          const userCredential = await createUserWithEmailAndPassword(auth, email, pw);
+          const user = userCredential.user;
+
+          await setDoc(doc(db, "users", user.uid), { 
+            fullName, dob, email, university, course, gender 
+          });
+
+          alert("✅ Account created successfully!");
+          showForm("signin");
+        } catch (err) {
+          alert("❌ " + err.message);
+        }
+      });
+
+      // SIGN IN
+      document.getElementById("signin").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const email = e.target["email"].value;
+        const password = e.target["password"].value;
+
+        try {
+          await signInWithEmailAndPassword(auth, email, password);
+          alert("✔ Login successful!");
+          window.location.href = "dashboard.html";
+        } catch (err) {
+          alert("❌ " + err.message);
+        }
+      });
+    });
+  </script>
+</head>
+
+<body>
+  <div class="overlay"></div>
+
+  <div class="auth-container">
+    <h1 class="logo">Smart Study Buddy</h1>
+
+    <!-- LOGIN -->
+    <form id="signin" class="auth-form">
+      <h2>Sign In</h2>
+      <input type="email" name="email" placeholder="Email" required>
+      <input type="password" name="password" placeholder="Password" required>
+
+      <button type="submit" class="btn">Login</button>
+
+      <p class="switch-text">Don't have an account?
+        <span onclick="showForm('signup')">Sign up</span>
+      </p>
+
+      <p class="switch-text" style="margin-top:-5px;">
+        <span onclick="forgotPassword()">Forgot Password?</span>
+      </p>
+    </form>
+
+    <!-- SIGN UP -->
+    <form id="signup" class="auth-form hidden">
+      <h2>Create Account</h2>
+
+      <input type="text" name="fullname" placeholder="Full Name" required>
+      <input type="date" name="dob" required>
+      <input type="email" name="email" placeholder="Email Address" required>
+      <input type="text" name="university" placeholder="University Name" required>
+      <input type="text" name="course" placeholder="Course" required>
+
+      <select name="gender" required>
+        <option value="">Select Gender</option>
+        <option>Male</option>
+        <option>Female</option>
+        <option>Other</option>
+      </select>
+
+      <input type="password" name="password" placeholder="Create Password" required>
+      <input type="password" name="confirm" placeholder="Confirm Password" required>
+
+      <button type="submit" class="btn">Sign Up</button>
+      <p class="switch-text">Already have an account?
+        <span onclick="showForm('signin')">Sign in</span>
+      </p>
+    </form>
+  </div>
+</body>
+</html>

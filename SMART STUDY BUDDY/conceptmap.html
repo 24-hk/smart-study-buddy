@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Concept Map | Smart Study Buddy</title>
+
+<script src="https://d3js.org/d3.v7.min.js"></script>
+
+<style>
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #0b0f1e, #1f2a50, #0b0f1e);
+    padding: 20px;
+    color: white;
+  }
+
+  #chart {
+    width: 100%;
+    height: 650px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 16px;
+    margin-top: 20px;
+  }
+
+  h2 { text-align: center; font-size: 30px; }
+  .pdf-name { text-align: center; opacity: 0.75; }
+  .back-btn {
+    display: block; margin: 20px auto;
+    padding: 12px 24px; border-radius: 10px;
+    background: #ffd700; color: black; font-weight: bold; border: none;
+  }
+
+  text { pointer-events: none; }
+</style>
+</head>
+
+<body>
+
+<h2>🧠 Concept Map Generator</h2>
+<p class="pdf-name">Using PDF: <b id="pdfName"></b></p>
+
+<div id="chart"></div>
+
+<button class="back-btn" onclick="location.href='dashboard.html'">← Back</button>
+
+<script>
+// ----------------------------------
+// LOAD DATA
+// ----------------------------------
+const raw = localStorage.getItem("studyPDFText") || "";
+const pdfName = localStorage.getItem("studyPDFName") || "No PDF";
+
+document.getElementById("pdfName").innerText = pdfName;
+
+if (!raw.trim()) {
+  alert("Upload a PDF or OCR image first!");
+  location.href = "upload.html";
+}
+
+let cleaned = raw
+  .replace(/\n+/g, " ")
+  .replace(/\s+/g, " ")
+  .trim()
+  .toLowerCase();
+
+// ----------------------------------
+// SMART TOPIC EXTRACTION
+// ----------------------------------
+function extractTopics(text) {
+  const words = text.split(/\W+/);
+
+  const blacklist = [
+    "login","register","view","events","makepayment","ticket",
+    "download","account","system","process","model"
+  ];
+
+  const freq = {};
+
+  words.forEach(w => {
+    if (w.length > 4 && !blacklist.includes(w)) {
+      freq[w] = (freq[w] || 0) + 1;
+    }
+  });
+
+  return Object.entries(freq)
+    .sort((a,b) => b[1] - a[1])
+    .slice(0, 6)
+    .map(x => x[0]);
+}
+
+let mainTopics = extractTopics(cleaned);
+if (mainTopics.length < 3) {
+  mainTopics = ["concepts", "analysis", "context"];
+}
+
+// ----------------------------------
+// SUBTOPIC EXTRACTION (Unique, Clean)
+// ----------------------------------
+function extractSubtopics(topic) {
+  const sentences = raw.split(/[.!?]/);
+
+  const subs = sentences
+    .filter(s => s.toLowerCase().includes(topic))
+    .map(s => {
+      return s
+        .replace(/[^a-zA-Z0-9 ]/g, "")
+        .trim()
+        .split(" ")
+        .slice(0, 4)
+        .join(" ");
+    })
+    .filter(t => t.length > 5);
+
+  return [...new Set(subs)].slice(0, 3); // UNIQUE VALUES ONLY
+}
+
+// ----------------------------------
+// GRAPH NODES & LINKS
+// ----------------------------------
+const nodes = [{ id: "PDF Content", group: 0 }];
+const links = [];
+
+function addNode(label, group) {
+  if (!nodes.some(n => n.id === label)) {
+    nodes.push({ id: label, group });
+  }
+}
+
+mainTopics.forEach(topic => {
+  addNode(topic, 1);
+  links.push({ source: "PDF Content", target: topic });
+
+  let subs = extractSubtopics(topic);
+
+  subs.forEach(s => {
+    addNode(s, 2);
+    links.push({ source: topic, target: s });
+  });
+});
+
+// ----------------------------------
+// D3 GRAPH WITH COLLISION FIX
+// ----------------------------------
+const width = document.getElementById("chart").clientWidth;
+const height = 650;
+
+const svg = d3.select("#chart")
+              .append("svg")
+              .attr("width", width)
+              .attr("height", height);
+
+const simulation = d3.forceSimulation(nodes)
+  .force("link", d3.forceLink(links).id(d => d.id).distance(180))
+  .force("charge", d3.forceManyBody().strength(-350))
+  .force("center", d3.forceCenter(width / 2, height / 2))
+  .force("collision", d3.forceCollide().radius(45));
+
+const link = svg.append("g")
+  .selectAll("line")
+  .data(links)
+  .enter().append("line")
+  .attr("stroke", "#ffffffaa")
+  .attr("stroke-width", 1);
+
+const node = svg.append("g")
+  .selectAll("circle")
+  .data(nodes)
+  .enter().append("circle")
+  .attr("r", d => d.group === 0 ? 20 : d.group === 1 ? 16 : 13)
+  .attr("fill", d =>
+    d.group === 0 ? "#00eaff" :
+    d.group === 1 ? "#ffd700" :
+    "#9d7bff")
+  .call(
+    d3.drag()
+      .on("start", dragStart)
+      .on("drag", dragMove)
+      .on("end", dragEnd)
+  );
+
+const label = svg.append("g")
+  .selectAll("text")
+  .data(nodes)
+  .enter()
+  .append("text")
+  .text(d => d.id)
+  .attr("font-size", "13px")
+  .attr("fill", "white")
+  .attr("text-anchor", "middle");
+
+simulation.on("tick", () => {
+  link
+    .attr("x1", d => d.source.x)
+    .attr("y1", d => d.source.y)
+    .attr("x2", d => d.target.x)
+    .attr("y2", d => d.target.y);
+
+  node
+    .attr("cx", d => d.x)
+    .attr("cy", d => d.y);
+
+  label
+    .attr("x", d => d.x)
+    .attr("y", d => d.y - 20);
+});
+
+// DRAGGING
+function dragStart(e, d) {
+  if (!e.active) simulation.alphaTarget(0.3).restart();
+  d.fx = d.x; d.fy = d.y;
+}
+function dragMove(e, d) {
+  d.fx = e.x; d.fy = e.y;
+}
+function dragEnd(e, d) {
+  if (!e.active) simulation.alphaTarget(0);
+  d.fx = null; d.fy = null;
+}
+</script>
+
+</body>
+</html>

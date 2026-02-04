@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload Study PDF | Smart Study Buddy</title>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #0b0f1e, #1f2a50, #0b0f1e);
+      background-size: 200% 200%;
+      animation: bgMove 10s infinite;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      padding: 20px;
+    }
+
+    @keyframes bgMove {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .container {
+      width: 90%;
+      max-width: 500px;
+      background: rgba(255,255,255,0.12);
+      backdrop-filter: blur(15px);
+      padding: 30px;
+      border-radius: 18px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.4);
+      text-align: center;
+    }
+
+    h2 {
+      margin-bottom: 10px;
+      font-size: 28px;
+    }
+
+    p {
+      font-size: 14px;
+      opacity: 0.8;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .upload-btn {
+      background: #ffd700;
+      color: #0b0f1e;
+      padding: 12px 22px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      margin-top: 20px;
+    }
+
+    .upload-btn:hover {
+      background: #ffeb73;
+    }
+
+    .progress-container {
+      width: 100%;
+      background: rgba(255,255,255,0.3);
+      border-radius: 10px;
+      height: 10px;
+      overflow: hidden;
+      margin-top: 20px;
+    }
+
+    .progress-bar {
+      width: 0%;
+      height: 100%;
+      background: #4caf50;
+      transition: width .3s ease;
+    }
+
+    .next-btn {
+      margin-top: 25px;
+      display: none;
+      background: #00c2ff;
+      color: #fff;
+      padding: 12px 22px;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .next-btn:hover {
+      background: #0094c9;
+    }
+
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <h2>📄 Upload Study PDF</h2>
+  <p>Upload one PDF — it will be used across all modules automatically.</p>
+
+  <label for="pdfInput" class="upload-btn">Choose PDF</label>
+  <input type="file" id="pdfInput" accept="application/pdf">
+
+  <div class="progress-container">
+    <div id="progressBar" class="progress-bar"></div>
+  </div>
+
+  <button id="nextBtn" class="next-btn" onclick="goDashboard()">Go to Dashboard</button>
+
+</div>
+
+<script>
+  const pdfInput = document.getElementById("pdfInput");
+  const progressBar = document.getElementById("progressBar");
+  const nextBtn = document.getElementById("nextBtn");
+
+  pdfInput.addEventListener("change", () => {
+    const file = pdfInput.files[0];
+    if (file) {
+      extractPDF(file);
+    }
+  });
+
+  async function extractPDF(file) {
+    const reader = new FileReader();
+
+    reader.onload = async function () {
+      const typedarray = new Uint8Array(this.result);
+      const pdf = await pdfjsLib.getDocument(typedarray).promise;
+
+      let fullText = "";
+
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        const text = content.items.map(item => item.str).join(" ");
+
+        fullText += text + " ";
+
+        progressBar.style.width = (i / pdf.numPages) * 100 + "%";
+      }
+
+      // Save for all modules
+      localStorage.setItem("studyPDFText", fullText);
+      localStorage.setItem("studyPDFName", file.name);
+
+      alert("✅ PDF Uploaded Successfully!");
+
+      nextBtn.style.display = "block";
+    };
+
+    reader.readAsArrayBuffer(file);
+  }
+
+  function goDashboard() {
+    window.location.href = "dashboard.html";
+  }
+</script>
+
+</body>
+</html>

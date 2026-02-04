@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OCR Image Upload | Smart Study Buddy</title>
+
+<link rel="stylesheet" href="dashboard.css">
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
+<style>
+body {
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(135deg, rgba(0,0,0,0.75), rgba(20,0,50,0.85)),
+  url('images/study-bg.jpg') no-repeat center/cover;
+  background-attachment: fixed;
+  color: white;
+  text-align: center;
+  padding: 40px;
+}
+.upload-box {
+  max-width: 450px;
+  margin: 40px auto;
+  padding: 30px;
+  background: rgba(20,20,50,0.65);
+  border-radius: 20px;
+  backdrop-filter: blur(12px);
+}
+</style>
+</head>
+
+<body>
+
+<h1 class="title">📷 OCR Image to Text</h1>
+<p class="subtitle">Upload an image — extract text automatically</p>
+
+<div class="upload-box">
+  <h3>Select an Image File</h3>
+  <input type="file" id="imageInput" accept="image/*">
+  <button class="btn-process" onclick="processImage()">Extract Text</button>
+  <p id="status"></p>
+</div>
+
+<script>
+function processImage() {
+  const file = document.getElementById("imageInput").files[0];
+  if (!file) return alert("Please upload an image first!");
+
+  document.getElementById("status").innerText = "⏳ Extracting text...";
+
+  Tesseract.recognize(file, 'eng', {
+    logger: m => {
+      document.getElementById("status").innerText =
+      `🔍 ${m.status} (${Math.round(m.progress * 100)}%)`;
+    }
+  })
+  .then(result => {
+    let text = result.data.text;
+
+    // CLEAN TEXT
+    text = text.replace(/\n+/g, " ")
+               .replace(/\s+/g, " ")
+               .replace(/[^a-zA-Z0-9.,!? ]/g, "")
+               .trim();
+
+    // BUILD SENTENCES IF OCR IS BROKEN
+    if (!text.includes(".")) {
+      const words = text.split(" ");
+      let sentences = [];
+      for (let i = 0; i < words.length; i += 10) {
+        let chunk = words.slice(i, i + 10).join(" ");
+        if (chunk.length > 8)
+          sentences.push(chunk.charAt(0).toUpperCase() + chunk.slice(1) + ".");
+      }
+      text = sentences.join(" ");
+    }
+
+    // ENSURE ENOUGH CONTENT
+    if (text.length < 50) {
+      alert("OCR text too short — try a clearer image.");
+      return;
+    }
+
+    // SAVE FOR ALL TOOLS
+    localStorage.setItem("studyPDFText", text);
+    localStorage.setItem("studyPDFName", file.name);
+
+    document.getElementById("status").innerText =
+      "✅ Text extracted! Redirecting...";
+
+    setTimeout(() => {
+      window.location.href = "dashboard.html";
+    }, 1000);
+  })
+  .catch(err => alert("OCR error: " + err));
+}
+</script>
+
+<script src="xpbar.js"></script>
+<script src="emotion.js"></script>
+
+</body>
+</html>

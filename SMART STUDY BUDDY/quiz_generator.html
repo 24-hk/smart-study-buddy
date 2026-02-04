@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Quiz Generator | Smart Study Buddy</title>
+
+<style>
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #0b0f1e, #1f2a50, #0b0f1e);
+    background-size: 200% 200%;
+    animation: bgShift 10s infinite;
+    color: white;
+    min-height: 100vh;
+    padding: 30px;
+  }
+
+  @keyframes bgShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  h2 {
+    text-align: center;
+    font-size: 32px;
+    margin-bottom: 10px;
+  }
+
+  .pdf-name {
+    text-align: center;
+    opacity: 0.8;
+    margin-bottom: 25px;
+    font-size: 14px;
+  }
+
+  .quiz-box {
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(15px);
+    padding: 25px;
+    border-radius: 16px;
+    max-width: 900px;
+    margin: auto;
+  }
+
+  .question {
+    margin-bottom: 35px;
+    background: rgba(255,255,255,0.08);
+    padding: 20px;
+    border-radius: 14px;
+  }
+
+  .question h3 {
+    margin-bottom: 15px;
+    font-size: 20px;
+    line-height: 1.4;
+  }
+
+  .option {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+
+    background: rgba(255,255,255,0.15);
+    padding: 12px;
+    border-radius: 10px;
+    cursor: pointer;
+
+    margin: 8px 0;
+    line-height: 1.4;
+    font-size: 15px;
+    color: white;
+
+    width: 100%;
+    white-space: normal;
+    word-wrap: break-word;
+  }
+
+  .option:hover {
+    background: rgba(255,255,255,0.25);
+  }
+
+  .option input {
+    margin-top: 4px;
+    transform: scale(1.2);
+  }
+
+  .submit-btn {
+    display: block;
+    margin: 30px auto;
+    padding: 12px 28px;
+    background: #00c2ff;
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+
+  .submit-btn:hover {
+    background: #0094c9;
+  }
+
+  .back-btn {
+    display: block;
+    margin: 15px auto;
+    padding: 12px 28px;
+    background: #ffd700;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: bold;
+    color: black;
+  }
+
+  .result {
+    text-align: center;
+    font-size: 24px;
+    margin-top: 20px;
+  }
+</style>
+
+</head>
+<body>
+
+<h2>🧠 AI-Enhanced Quiz Generator</h2>
+<p class="pdf-name">Using: <b id="pdfName"></b></p>
+
+<div id="quizContainer" class="quiz-box"></div>
+
+<button class="submit-btn" onclick="submitQuiz()">Submit Quiz</button>
+
+<p id="resultText" class="result"></p>
+
+<button class="back-btn" onclick="location.href='dashboard.html'">← Back to Dashboard</button>
+
+<script>
+/* -----------------------------------
+   LOAD TEXT
+------------------------------------ */
+let rawText = localStorage.getItem("studyPDFText");
+let pdfName = localStorage.getItem("studyPDFName");
+
+if (!rawText) {
+  alert("Please upload a PDF or OCR image first!");
+  window.location.href = "upload.html";
+}
+document.getElementById("pdfName").innerText = pdfName || "Untitled";
+
+/* -----------------------------------
+   CLEAN TEXT FOR PROCESSING
+------------------------------------ */
+rawText = rawText.replace(/\n+/g, " ").replace(/\s+/g, " ").trim();
+
+/* Break into usable sentences */
+let sentences = rawText.split(/[.!?]/).map(s => s.trim()).filter(s => s.length > 20);
+
+/* If OCR text is small → auto-build */
+if (sentences.length < 10) {
+  const words = rawText.split(" ");
+  sentences = [];
+  for (let i = 0; i < words.length; i += 12) {
+    let chunk = words.slice(i, i + 12).join(" ");
+    if (chunk.length > 10) sentences.push(chunk + ".");
+  }
+}
+
+/* Ensure at least 20 */
+while (sentences.length < 20) sentences = sentences.concat(sentences);
+
+/* -----------------------------------
+   KEYWORD EXTRACTION (AI-Like)
+------------------------------------ */
+function extractKeywords(text) {
+  let words = text.split(/\s+/).filter(w => /^[A-Za-z]{5,}$/.test(w));
+  words = [...new Set(words)];
+  return words.slice(0, 40);
+}
+
+let keywords = extractKeywords(rawText);
+
+/* If OCR has few words → fallback keyword list */
+if (keywords.length < 10) {
+  keywords = ["system","process","model","method","design","storage","network","analysis","learning","service"];
+}
+
+/* -----------------------------------
+   AI-STYLE QUESTION CREATION
+------------------------------------ */
+function createMCQ(concept, definitionSentence) {
+  let templates = [
+    `Which statement best describes **${concept}**?`,
+    `What is the primary purpose of **${concept}**?`,
+    `Which of the following relates to **${concept}**?`,
+    `Which explanation about **${concept}** is accurate?`
+  ];
+
+  let question = templates[Math.floor(Math.random() * templates.length)];
+
+  let correct = definitionSentence;
+
+  let distractors = sentences
+    .filter(s => s !== correct)
+    .slice(0, 3);
+
+  while (distractors.length < 3) {
+    distractors.push("This statement does NOT accurately relate to the concept.");
+  }
+
+  return {
+    q: question,
+    correct: correct,
+    options: shuffle([correct, ...distractors])
+  };
+}
+
+/* -----------------------------------
+   BUILD QUIZ (20 Questions)
+------------------------------------ */
+let quiz = [];
+
+for (let i = 0; i < 20; i++) {
+  let concept = keywords[i % keywords.length];
+  let definition = sentences[i % sentences.length];
+  quiz.push(createMCQ(concept, definition));
+}
+
+/* -----------------------------------
+   DISPLAY QUIZ
+------------------------------------ */
+function displayQuiz() {
+  const box = document.getElementById("quizContainer");
+  box.innerHTML = "";
+
+  quiz.forEach((item, i) => {
+    let html = `
+    <div class="question">
+      <h3>${i+1}. ${item.q}</h3>
+    `;
+
+    item.options.forEach(opt => {
+      html += `
+        <div class="option">
+          <input type="radio" name="q${i}" value="${opt}">
+          <span>${opt}</span>
+        </div>
+      `;
+    });
+
+    html += `</div>`;
+    box.innerHTML += html;
+  });
+}
+displayQuiz();
+
+/* -----------------------------------
+   SUBMIT QUIZ
+------------------------------------ */
+function submitQuiz() {
+  let score = 0;
+
+  quiz.forEach((item, i) => {
+    let selected = document.querySelector(`input[name="q${i}"]:checked`);
+    if (selected && selected.value === item.correct) score++;
+  });
+
+  document.getElementById("resultText").innerHTML =
+    `You scored <b>${score}/20</b>`;
+}
+
+/* -----------------------------------
+   Shuffle Utility
+------------------------------------ */
+function shuffle(arr) {
+  return arr.sort(() => Math.random() - 0.5);
+}
+</script>
+
+<script src="xpbar.js"></script>
+<script src="emotion.js"></script>
+
+</body>
+</html>

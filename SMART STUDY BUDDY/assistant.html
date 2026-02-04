@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Assistant | Smart Study Buddy</title>
+
+<style>
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #0b0f1e, #1f2a50, #0b0f1e);
+    background-size: 200% 200%;
+    animation: bgShift 10s infinite;
+    min-height: 100vh;
+    padding: 30px;
+    color: white;
+  }
+
+  @keyframes bgShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  h2 {
+    text-align: center;
+    font-size: 30px;
+    margin-bottom: 10px;
+  }
+
+  .assistant-box {
+    max-width: 800px;
+    margin: auto;
+    background: rgba(255,255,255,0.12);
+    padding: 25px;
+    border-radius: 14px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.4);
+    backdrop-filter: blur(15px);
+  }
+
+  #chat {
+    height: 350px;
+    overflow-y: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.1);
+  }
+
+  .user-msg, .bot-msg {
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 10px;
+    white-space: pre-wrap;
+  }
+
+  .user-msg {
+    background: rgba(0,183,255,0.3);
+    text-align: right;
+  }
+
+  .bot-msg {
+    background: rgba(255,255,255,0.18);
+  }
+
+  .input-area {
+    display: flex;
+    margin-top: 15px;
+  }
+
+  .input-area input {
+    flex: 1;
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+    outline: none;
+  }
+
+  .input-area button {
+    padding: 12px 20px;
+    margin-left: 10px;
+    background: #ffd700;
+    color: black;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+
+  .back-btn {
+    display: block;
+    margin: 25px auto;
+    padding: 12px 24px;
+    background: #00c2ff;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    color: white;
+    font-weight: bold;
+  }
+</style>
+
+</head>
+<body>
+
+<h2>🤖 Smart Study Assistant</h2>
+<p style="text-align:center; opacity:0.8;">Using PDF: <b id="pdfName"></b></p>
+
+<div class="assistant-box">
+
+  <div id="chat"></div>
+
+  <div class="input-area">
+    <input type="text" id="userInput" placeholder="Ask anything from your PDF...">
+    <button onclick="sendMessage()">Send</button>
+  </div>
+
+</div>
+
+<button class="back-btn" onclick="window.location.href='dashboard.html'">← Back to Dashboard</button>
+
+<script>
+// =========================
+// LOAD PDF TEXT
+// =========================
+const pdfText = localStorage.getItem("studyPDFText");
+const pdfName = localStorage.getItem("studyPDFName");
+
+document.getElementById("pdfName").innerText = pdfName || "No PDF";
+
+if (!pdfText) {
+  alert("Please upload a PDF first!");
+  window.location.href = "upload.html";
+}
+
+// =========================
+// MESSAGE SEND
+// =========================
+function sendMessage() {
+  const input = document.getElementById("userInput");
+  const text = input.value.trim();
+  if (!text) return;
+
+  addUserMessage(text);
+  input.value = "";
+
+  setTimeout(() => generateResponse(text), 300);
+}
+
+// =========================
+// ADD USER MESSAGE
+// =========================
+function addUserMessage(msg) {
+  document.getElementById("chat").innerHTML += `
+    <div class="user-msg">${msg}</div>
+  `;
+  scrollChat();
+}
+
+// =========================
+// ADD BOT MESSAGE
+// =========================
+function addBotMessage(msg) {
+  document.getElementById("chat").innerHTML += `
+    <div class="bot-msg">${msg}</div>
+  `;
+  scrollChat();
+}
+
+function scrollChat() {
+  const chat = document.getElementById("chat");
+  chat.scrollTop = chat.scrollHeight;
+}
+
+// =========================
+// RESPONSE LOGIC (SMART)
+// =========================
+function generateResponse(question) {
+  const text = pdfText.toLowerCase();
+  const q = question.toLowerCase();
+
+  // Basic commands
+  if (q.includes("explain pdf") || q.includes("summary") || q.includes("overview")) {
+    return respondSummary();
+  }
+
+  // Extract keywords
+  const words = q.split(" ").filter(w => w.length > 3);
+  let matches = [];
+
+  words.forEach(word => {
+    if (text.includes(word)) {
+      const regex = new RegExp(`[^.]*${word}[^.]*\\.`, "gi");
+      const found = text.match(regex);
+      if (found) matches.push(...found);
+    }
+  });
+
+  // If no content found → fallback
+  if (matches.length === 0) {
+    addBotMessage("• I could not find exact matches.\n• Try using a different keyword.\n• Example: 'Explain machine learning'");
+    return;
+  }
+
+  // Create bullet-point answer
+  const bullets = matches.slice(0, 5).map(s => "• " + s.trim()).join("\n");
+
+  addBotMessage(bullets);
+  addXP(5, "Asked Study Question");
+}
+
+// =========================
+// SUMMARY RESPONSE
+// =========================
+function respondSummary() {
+  const sentences = pdfText.split(/[.!?]/).filter(s => s.length > 50);
+  const summary = sentences.slice(0, 5).map(s => "• " + s.trim()).join("\n");
+
+  addBotMessage("Here is your PDF summary:\n\n" + summary);
+  addXP(10, "Requested Summary");
+}
+
+// =========================
+// XP SYSTEM
+// =========================
+function addXP(amount) {
+  let xp = parseInt(localStorage.getItem("xp") || "0");
+  let level = parseInt(localStorage.getItem("level") || "1");
+
+  xp += amount;
+  const nextLevel = level * 100;
+
+  if (xp >= nextLevel) {
+    xp -= nextLevel;
+    level++;
+    alert(`🎉 LEVEL UP! You reached Level ${level}!`);
+  }
+
+  localStorage.setItem("xp", xp);
+  localStorage.setItem("level", level);
+}
+
+</script>
+
+<script src="xpbar.js"></script>
+<script src="emotion.js"></script>
+
+</body>
+</html>

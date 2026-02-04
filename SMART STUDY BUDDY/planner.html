@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Planner | Smart Study Buddy</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #0b0f1e, #1f2a50, #0b0f1e);
+    background-size: 200% 200%;
+    animation: bgShift 10s infinite;
+    color: white;
+    padding: 30px;
+    min-height: 100vh;
+  }
+
+  @keyframes bgShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  .container {
+    max-width: 600px;
+    margin: auto;
+    background: rgba(255,255,255,0.12);
+    padding: 30px;
+    border-radius: 18px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.4);
+    backdrop-filter: blur(15px);
+  }
+
+  h2 {
+    text-align: center;
+    font-size: 28px;
+  }
+
+  label {
+    margin-top: 15px;
+    display: block;
+  }
+
+  input {
+    width: 100%;
+    padding: 12px;
+    margin-top: 6px;
+    border-radius: 8px;
+    border: none;
+  }
+
+  .btn {
+    margin-top: 20px;
+    background: #ffd700;
+    padding: 12px 20px;
+    border: none;
+    color: black;
+    font-weight: bold;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+
+  .btn:hover {
+    background: #ffec80;
+  }
+
+  .day {
+    background: rgba(255,255,255,0.15);
+    padding: 12px;
+    border-radius: 10px;
+    margin: 10px 0;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h2>📅 Smart Study Planner</h2>
+
+  <label>📘 Exam Date:</label>
+  <input type="date" id="examDate"/>
+
+  <label>📚 Number of Topics:</label>
+  <input type="number" id="topics" min="1" max="50"/>
+
+  <button class="btn" onclick="generatePlan()">Generate Plan</button>
+
+  <div id="output"></div>
+
+  <button class="btn" id="downloadBtn" style="display:none;" onclick="savePDF()">💾 Download Plan as PDF</button>
+</div>
+
+<script>
+// Load PDF content
+const pdfText = localStorage.getItem("studyPDFText");
+const pdfName = localStorage.getItem("studyPDFName");
+
+if (!pdfText) {
+  alert("Please upload a PDF first!");
+  window.location.href = "upload.html";
+}
+
+function generatePlan() {
+  const examDate = new Date(document.getElementById("examDate").value);
+  const numTopics = parseInt(document.getElementById("topics").value);
+
+  if (!examDate || numTopics <= 0) {
+    alert("Please enter valid info");
+    return;
+  }
+
+  const today = new Date();
+  const diff = Math.ceil((examDate - today) / (1000*60*60*24));
+
+  if (diff <= 0) {
+    alert("Exam date must be in the future");
+    return;
+  }
+
+  const sentences = pdfText.split(/[.!?]/).filter(s => s.trim().length > 30);
+  const topics = sentences.slice(0, numTopics).map((s, i) =>
+    "Topic " + (i+1) + ": " + s.trim().split(" ").slice(0, 6).join(" ") + "..."
+  );
+
+  const daysPerTopic = Math.ceil(diff / numTopics);
+
+  const output = document.getElementById("output");
+  output.innerHTML = `<h3>📘 Study Plan for ${pdfName}</h3>`;
+
+  let current = new Date();
+
+  window.generatedStudyPlan = []; // store for PDF
+
+  topics.forEach((topic, i) => {
+    const start = new Date(current);
+    const end = new Date(current);
+    end.setDate(end.getDate() + daysPerTopic - 1);
+
+    const block = {
+      topic,
+      start: start.toDateString(),
+      end: end.toDateString()
+    };
+
+    window.generatedStudyPlan.push(block);
+
+    output.innerHTML += `
+      <div class="day">
+        <b>${topic}</b><br>
+        📅 ${start.toDateString()} → ${end.toDateString()}
+      </div>
+    `;
+
+    current.setDate(current.getDate() + daysPerTopic);
+  });
+
+  document.getElementById("downloadBtn").style.display = "block";
+  addXP(15);
+}
+
+// FULL FIX — Auto line wrap + multi-page support
+function savePDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: "pt", format: "a4" });
+
+  doc.setFont("Helvetica", "bold");
+  doc.setFontSize(16);
+  doc.text("Smart Study Buddy — Study Plan", 40, 40);
+
+  doc.setFontSize(12);
+
+  let y = 80;
+  const lineHeight = 18;
+
+  window.generatedStudyPlan.forEach(block => {
+    let lines = [
+      block.topic,
+      "Date Range: " + block.start + " → " + block.end,
+      " "
+    ];
+
+    lines.forEach(line => {
+      if (y > 780) {
+        doc.addPage();
+        y = 40;
+      }
+      doc.text(line, 40, y);
+      y += lineHeight;
+    });
+  });
+
+  doc.save(`StudyPlan_${pdfName}.pdf`);
+  alert("✅ PDF Saved!");
+}
+
+function addXP(amount){
+  let xp = parseInt(localStorage.getItem("xp") || "0");
+  let level = parseInt(localStorage.getItem("level") || "1");
+
+  xp += amount;
+
+  const next = level * 100;
+  if (xp >= next) {
+    xp -= next;
+    level++;
+    alert(`🎉 LEVEL UP! You reached Level ${level}!`);
+  }
+
+  localStorage.setItem("xp", xp);
+  localStorage.setItem("level", level);
+}
+</script>
+
+<script src="xpbar.js"></script>
+<script src="emotion.js"></script>
+
+</body>
+</html>

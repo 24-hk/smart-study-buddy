@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flashcard Generator | Smart Study Buddy</title>
+
+<style>
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #0b0f1e, #1f2a50, #0b0f1e);
+    background-size: 200% 200%;
+    animation: bgShift 10s infinite;
+    min-height: 100vh;
+    padding: 30px;
+    color: white;
+  }
+
+  @keyframes bgShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  h2 {
+    text-align: center;
+    margin-bottom: 10px;
+    font-size: 30px;
+  }
+
+  .pdf-name {
+    text-align: center;
+    font-size: 14px;
+    opacity: 0.8;
+    margin-bottom: 30px;
+  }
+
+  .flashcards-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 22px;
+  }
+
+  .card {
+    width: 200px;
+    height: 130px;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    cursor: pointer;
+    perspective: 1000px;
+    position: relative;
+    transition: 0.3s;
+  }
+
+  .card-inner {
+    width: 100%;
+    height: 100%;
+    transition: transform .6s;
+    transform-style: preserve-3d;
+    position: relative;
+  }
+
+  .card.flipped .card-inner {
+    transform: rotateY(180deg);
+  }
+
+  .front, .back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    backface-visibility: hidden;
+    text-align: center;
+    font-size: 14px;
+  }
+
+  .front {
+    background: rgba(255,255,255,0.25);
+    font-weight: bold;
+  }
+
+  .back {
+    background: rgba(0,183,255,0.25);
+    transform: rotateY(180deg);
+  }
+
+  .btn {
+    margin: 25px auto;
+    display: block;
+    padding: 12px 22px;
+    background: #00c2ff;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 15px;
+  }
+</style>
+</head>
+
+<body>
+
+<h2>📘 Flashcard Generator</h2>
+
+<!-- FIXED: THIS MUST EXIST -->
+<p class="pdf-name">Using PDF: <b id="pdfName"></b></p>
+
+<div class="flashcards-container" id="flashcards"></div>
+
+<button class="btn" onclick="generateFlashcards()">🔁 Generate Again</button>
+<button class="btn" onclick="window.location.href='dashboard.html'">← Back to Dashboard</button>
+
+<script>
+/* --------------------------
+   LOAD TEXT
+---------------------------- */
+const rawText = localStorage.getItem("studyPDFText");
+const pdfName = localStorage.getItem("studyPDFName");
+
+if (!rawText) {
+  alert("Please upload a PDF or OCR image first!");
+  window.location.href = "upload.html";
+}
+
+// FIXED: Now pdfName element exists
+document.getElementById("pdfName").innerText = pdfName || "Untitled";
+
+/* --------------------------
+   CLEAN + BUILD SENTENCES
+---------------------------- */
+function prepareSentences(text) {
+  text = text.replace(/\n+/g, " ").replace(/\s+/g, " ").trim();
+
+  let sentences = text.split(/[.!?]/).map(s => s.trim());
+
+  // If OCR text has no sentences → build artificial ones
+  if (sentences.length < 5) {
+    const words = text.split(" ");
+    sentences = [];
+    for (let i = 0; i < words.length; i += 10) {
+      let chunk = words.slice(i, i + 10).join(" ");
+      if (chunk.length > 8) sentences.push(chunk + ".");
+    }
+  }
+
+  while (sentences.length < 20) sentences = sentences.concat(sentences);
+  return sentences.slice(0, 20);
+}
+
+const sentences = prepareSentences(rawText);
+
+/* --------------------------
+   KEYWORD EXTRACTION
+---------------------------- */
+function extractKeywords(text) {
+  let words = text.split(/\s+/).filter(w => w.length > 4);
+  words = [...new Set(words)];
+  return words.slice(0, 20);
+}
+
+const keywords = extractKeywords(rawText);
+
+/* --------------------------
+   GENERATE FLASHCARDS
+---------------------------- */
+function generateFlashcards() {
+  const container = document.getElementById("flashcards");
+  container.innerHTML = "";
+
+  for (let i = 0; i < 20; i++) {
+    const front = keywords[i] || `Topic ${i+1}`;
+    const back = sentences[i] || "No content.";
+
+    const card = document.createElement("div");
+    card.className = "card";
+
+    card.innerHTML = `
+      <div class="card-inner">
+        <div class="front">${front}</div>
+        <div class="back">${back}</div>
+      </div>
+    `;
+
+    card.addEventListener("click", () => card.classList.toggle("flipped"));
+
+    container.appendChild(card);
+  }
+}
+
+generateFlashcards();
+</script>
+
+<script src="xpbar.js"></script>
+<script src="emotion.js"></script>
+
+</body>
+</html>

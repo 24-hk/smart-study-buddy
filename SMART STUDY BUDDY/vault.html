@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>🏛️ University Vault | Smart Study Buddy</title>
+
+<link rel="stylesheet" href="dashboard.css" />
+
+<style>
+body {
+  font-family: 'Poppins', sans-serif;
+  background:
+    linear-gradient(135deg, rgba(0,0,0,0.75), rgba(20,0,50,0.85)),
+    url('images/study-bg.jpg') no-repeat center center/cover;
+  background-attachment: fixed;
+  color: white;
+  padding: 40px 20px;
+}
+
+/* Card Grid */
+.vault-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 25px;
+  margin-top: 25px;
+}
+
+.vault-card {
+  background: rgba(15, 15, 35, 0.65);
+  border-radius: 18px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  transition: 0.3s ease;
+  position: relative;
+  cursor: pointer;
+}
+
+.vault-card:hover {
+  background: rgba(25,25,55,0.85);
+  box-shadow: 0 0 25px rgba(150,70,255,0.6);
+  transform: translateY(-6px);
+}
+
+/* Recommended badge */
+.reco-badge {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background: linear-gradient(45deg, #d16bff, #5f9bff);
+  color: white;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: bold;
+  border-radius: 12px;
+}
+
+/* Download Button */
+.dl-btn {
+  margin-top: 12px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.25);
+  color: white;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.dl-btn:hover {
+  background: rgba(255,255,255,0.45);
+}
+
+/* Recommended Section */
+#recommendedBox {
+  margin-top: 20px;
+  background: rgba(30, 0, 70, 0.6);
+  padding: 20px;
+  border-radius: 18px;
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.15);
+  display: none;
+}
+
+/* Gap Finder Section */
+#gapFinderBox {
+  background: rgba(80,0,120,0.45);
+  padding: 20px;
+  margin-top: 30px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.2);
+  display: none;
+}
+</style>
+</head>
+
+<body>
+
+<h1 class="title">🏛 University Vault</h1>
+<p class="subtitle">Recommended research papers based on your study material</p>
+
+<!-- Recommended Papers Section -->
+<div id="recommendedBox">
+  <h2>✨ Recommended For You</h2>
+  <div id="recommendedPapers" class="vault-container"></div>
+</div>
+
+<!-- Research Gap Finder -->
+<div id="gapFinderBox">
+  <h2>🔍 Possible Research Gaps</h2>
+  <p id="gapList" style="font-size: 14px; line-height: 1.6;"></p>
+</div>
+
+<!-- ALL PAPERS -->
+<h2 style="margin-top: 30px;">All Papers</h2>
+<div id="vaultContainer" class="vault-container">
+
+  <!-- SOFTWARE ENGINEERING -->
+  <div class="vault-card" data-category="software" data-title="Software Engineering Practices"
+    data-url="https://arxiv.org/pdf/2105.02241.pdf">
+    <h3>Software Engineering Practices</h3>
+    <p>Modern development methodologies and challenges.</p>
+  </div>
+
+  <div class="vault-card" data-category="software" data-title="System Design in Large Applications"
+    data-url="https://arxiv.org/pdf/2203.05045.pdf">
+    <h3>System Design in Large Applications</h3>
+    <p>Scalable service architecture and modular development.</p>
+  </div>
+
+  <!-- CLOUD -->
+  <div class="vault-card" data-category="cloud" data-title="Secure Cloud Computing Models"
+    data-url="https://arxiv.org/pdf/2004.05022.pdf">
+    <h3>Secure Cloud Computing Models</h3>
+    <p>Privacy and security in cloud systems.</p>
+  </div>
+
+  <div class="vault-card" data-category="cloud" data-title="Cloud Data Storage Techniques"
+    data-url="https://arxiv.org/pdf/2102.05650.pdf">
+    <h3>Cloud Data Storage Techniques</h3>
+    <p>Distributed storage & encryption.</p>
+  </div>
+
+  <!-- DATA -->
+  <div class="vault-card" data-category="data" data-title="Big Data Analytics in Education"
+    data-url="https://arxiv.org/pdf/1904.12238.pdf">
+    <h3>Big Data Analytics in Education</h3>
+    <p>Use of data for improving learning outcomes.</p>
+  </div>
+
+  <div class="vault-card" data-category="data" data-title="Data Security Mechanisms"
+    data-url="https://arxiv.org/pdf/1801.01816.pdf">
+    <h3>Data Security Mechanisms</h3>
+    <p>Protecting sensitive data in digital systems.</p>
+  </div>
+
+  <!-- EDUCATION -->
+  <div class="vault-card" data-category="edu" data-title="Digital Learning in Higher Education"
+    data-url="https://files.eric.ed.gov/fulltext/EJ1347052.pdf">
+    <h3>Digital Learning in Higher Education</h3>
+    <p>Impact and transformation of e-learning.</p>
+  </div>
+
+  <div class="vault-card" data-category="edu" data-title="Gamification for Student Engagement"
+    data-url="https://files.eric.ed.gov/fulltext/EJ1288959.pdf">
+    <h3>Gamification for Student Engagement</h3>
+    <p>Improving motivation using gamified techniques.</p>
+  </div>
+
+</div>
+
+<script>
+// Load PDF text
+const pdfText = localStorage.getItem("studyPDFText") || "";
+
+/* Extract keywords */
+function extractKeywords(text) {
+  const words = text.toLowerCase().split(/\W+/);
+  const freq = {};
+  words.forEach(w => {
+    if (w.length > 4) freq[w] = (freq[w] || 0) + 1;
+  });
+  return Object.entries(freq)
+    .sort((a,b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(x => x[0]);
+}
+
+// Category keywords
+const topicMap = {
+  cloud: ["cloud", "virtual", "infrastructure", "server", "deployment"],
+  software: ["software", "system", "design", "architecture", "engineering"],
+  data: ["data", "analytics", "security", "storage", "database"],
+  edu: ["education", "student", "learning", "teaching", "engagement"]
+};
+
+// Detect related category
+function detectCategory(keywords) {
+  for (let category in topicMap) {
+    for (let word of keywords) {
+      if (topicMap[category].includes(word)) {
+        return category;
+      }
+    }
+  }
+  return null;
+}
+
+const keywords = extractKeywords(pdfText);
+let match = detectCategory(keywords);
+
+const allCards = Array.from(document.querySelectorAll(".vault-card"));
+const recommendedBox = document.getElementById("recommendedBox");
+const recommendedPapers = document.getElementById("recommendedPapers");
+
+/* ----------------------------------
+   BUILD RECOMMENDATIONS
+---------------------------------- */
+function buildRecommendations(category) {
+  let recoList = [];
+
+  if (category) {
+    recoList = allCards.filter(card => card.dataset.category === category);
+  }
+
+  if (recoList.length < 5) {
+    const others = allCards.filter(c => c.dataset.category !== category);
+    recoList = recoList.concat(others.slice(0, 5 - recoList.length));
+  }
+
+  recoList = recoList.slice(0, 5);
+
+  recoList.forEach(card => {
+    const clone = card.cloneNode(true);
+
+    // Badge
+    const badge = document.createElement("div");
+    badge.classList.add("reco-badge");
+    badge.innerText = "Recommended";
+    clone.appendChild(badge);
+
+    // Download Button
+    const dl = document.createElement("button");
+    dl.classList.add("dl-btn");
+    dl.innerText = "⬇ Download PDF";
+    dl.onclick = () => window.open(card.dataset.url, "_blank");
+    clone.appendChild(dl);
+
+    recommendedPapers.appendChild(clone);
+  });
+
+  recommendedBox.style.display = "block";
+}
+
+// Build recommendations
+buildRecommendations(match);
+
+/* ----------------------------------
+   RESEARCH GAP FINDER
+---------------------------------- */
+function findResearchGaps(userKeywords) {
+  let vaultWords = [];
+
+  allCards.forEach(card => {
+    const category = card.dataset.category;
+    if (topicMap[category]) {
+      vaultWords = vaultWords.concat(topicMap[category]);
+    }
+  });
+
+  vaultWords = [...new Set(vaultWords)];
+
+  let gaps = userKeywords.filter(k => !vaultWords.includes(k));
+
+  const gapBox = document.getElementById("gapFinderBox");
+  const gapList = document.getElementById("gapList");
+
+  if (gaps.length > 0) {
+    gapList.innerHTML = gaps.map(g => `• ${g}`).join("<br>");
+    gapBox.style.display = "block";
+  } else {
+    gapList.innerHTML = "All major topics appear to be covered within the available research papers.";
+    gapBox.style.display = "block";
+  }
+}
+
+// Run gap finder
+findResearchGaps(keywords);
+
+/* XP reward for opening paper */
+allCards.forEach(card => {
+  card.addEventListener("click", () => {
+    window.open(card.dataset.url, "_blank");
+    if (typeof addXP === "function") addXP(5, "Viewed Research Paper");
+  });
+});
+</script>
+
+<script src="xpbar.js"></script>
+<script src="emotion.js"></script>
+
+</body>
+</html>

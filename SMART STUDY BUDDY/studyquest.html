@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudyQuest | Smart Study Buddy</title>
+
+<style>
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #0b0f1e, #162860, #0b0f1e);
+    background-size: 200% 200%;
+    animation: bgShift 10s infinite;
+    min-height: 100vh;
+    color: white;
+    padding: 30px;
+  }
+
+  @keyframes bgShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  h2 {
+    text-align: center;
+    font-size: 34px;
+    margin-bottom: 10px;
+  }
+
+  .sub {
+    text-align: center;
+    opacity: 0.8;
+    margin-bottom: 25px;
+  }
+
+  .quest-container {
+    max-width: 900px;
+    margin: auto;
+    background: rgba(255,255,255,0.12);
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 0 25px rgba(0,0,0,0.5);
+    backdrop-filter: blur(12px);
+  }
+
+  /* XP Ring Container */
+  .xp-ring-box {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 30px;
+  }
+
+  svg {
+    overflow: visible;
+  }
+
+  /* XP Text */
+  .xp-text {
+    text-anchor: middle;
+    fill: white;
+    font-size: 18px;
+    font-weight: bold;
+  }
+
+  /* XP History */
+  .history {
+    margin-top: 25px;
+    padding: 20px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 14px;
+  }
+
+  .history h3 {
+    margin-bottom: 10px;
+  }
+
+  .log-item {
+    margin-bottom: 6px;
+  }
+
+  /* Badges */
+  .badge-section {
+    margin-top: 25px;
+  }
+
+  .badge-card {
+    background: rgba(255,255,255,0.12);
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    border-left: 5px solid transparent;
+    transition: 0.3s;
+  }
+
+  .badge-card.unlocked {
+    border-left: 5px solid #00eaff;
+    box-shadow: 0 0 12px #00eaff;
+  }
+
+  .back-btn {
+    margin: 30px auto;
+    display: block;
+    padding: 12px 20px;
+    background: #ffd700;
+    color: black;
+    border-radius: 10px;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+  }
+</style>
+
+</head>
+<body>
+
+<h2>⭐ StudyQuest — Your XP Journey</h2>
+<p class="sub">Gamified learning progress with badges, streak, and achievements</p>
+
+<div class="quest-container">
+
+  <!-- XP RING -->
+  <div class="xp-ring-box">
+    <svg width="220" height="220">
+      <circle id="bgRing" cx="110" cy="110" r="90" stroke="rgba(255,255,255,0.2)" stroke-width="18" fill="none"/>
+      <circle id="xpRing" cx="110" cy="110" r="90" stroke="#00eaff"
+              stroke-width="18" fill="none"
+              stroke-linecap="round"
+              transform="rotate(-90 110 110)"
+              stroke-dasharray="565"
+              stroke-dashoffset="565"
+              style="filter: drop-shadow(0 0 10px #00eaff);" />
+      <text x="110" y="115" class="xp-text" id="levelText">Level 1</text>
+      <text x="110" y="145" class="xp-text" id="xpText">XP: 0 / 100</text>
+    </svg>
+  </div>
+
+  <!-- BADGES -->
+  <div class="badge-section">
+    <h3>🏅 Unlocked Badges</h3>
+
+    <div id="badge3" class="badge-card">Machine Learning Rookie — Level 3</div>
+    <div id="badge5" class="badge-card">Data Explorer — Level 5</div>
+    <div id="badge10" class="badge-card">AI Specialist — Level 10</div>
+    <div id="badge15" class="badge-card">Neural Master — Level 15</div>
+    <div id="badge20" class="badge-card">Superintelligence Rank — Level 20</div>
+  </div>
+
+  <!-- XP HISTORY -->
+  <div class="history">
+    <h3>📜 XP Activity</h3>
+    <div id="historyLog"></div>
+  </div>
+
+</div>
+
+<button class="back-btn" onclick="window.location.href='dashboard.html'">← Back to Dashboard</button>
+<script>
+let xp = parseInt(localStorage.getItem("xp") || "0");
+let level = parseInt(localStorage.getItem("level") || "1");
+let nextTarget = level * 100;
+
+// Update XP Ring
+function updateXPRing() {
+    const circumference = 565;
+    const percent = xp / nextTarget;
+    const offset = circumference - (percent * circumference);
+
+    document.getElementById("xpRing").style.strokeDashoffset = offset;
+    document.getElementById("levelText").innerText = "Level " + level;
+    document.getElementById("xpText").innerText = `XP: ${xp} / ${nextTarget}`;
+}
+
+// Update Badges
+function updateBadges() {
+    if (level >= 3) badge3.classList.add("unlocked");
+    if (level >= 5) badge5.classList.add("unlocked");
+    if (level >= 10) badge10.classList.add("unlocked");
+    if (level >= 15) badge15.classList.add("unlocked");
+    if (level >= 20) badge20.classList.add("unlocked");
+}
+
+// Show XP History
+function loadHistory() {
+    const history = JSON.parse(localStorage.getItem("xpHistory") || "[]");
+    let html = "";
+
+    history.forEach(h => {
+        html += `<div class="log-item">• +${h.amount} XP — ${h.reason}</div>`;
+    });
+
+    document.getElementById("historyLog").innerHTML = html;
+}
+
+updateXPRing();
+updateBadges();
+loadHistory();
+</script>
+
+
+
+<script src="xpbar.js"></script>
+<script src="emotion.js"></script>
+
+</body>
+</html>

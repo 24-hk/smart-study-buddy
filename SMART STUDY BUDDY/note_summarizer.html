@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PDF Summarizer | Smart Study Buddy</title>
+
+<style>
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #0b0f1e, #1f2a50, #0b0f1e);
+    background-size: 200% 200%;
+    animation: bgShift 10s infinite;
+    min-height: 100vh;
+    padding: 30px;
+    color: white;
+  }
+
+  @keyframes bgShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  .container {
+    max-width: 900px;
+    margin: auto;
+    background: rgba(255,255,255,0.12);
+    padding: 30px;
+    border-radius: 18px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.4);
+    backdrop-filter: blur(15px);
+  }
+
+  h2 {
+    text-align: center;
+    font-size: 30px;
+  }
+
+  .pdf-name {
+    text-align: center;
+    margin-bottom: 25px;
+    opacity: 0.8;
+  }
+
+  .btn {
+    padding: 12px 20px;
+    margin: 15px auto;
+    display: block;
+    background: #ffd700;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 15px;
+  }
+
+  .btn:hover {
+    background: #ffec80;
+  }
+
+  #keywords, #summary {
+    margin-top: 20px;
+    background: rgba(255,255,255,0.15);
+    padding: 20px;
+    border-radius: 12px;
+    white-space: pre-wrap;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
+  }
+
+  .back-btn {
+    display: block;
+    margin: 30px auto;
+    padding: 12px 24px;
+    background: #00c2ff;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+</style>
+
+</head>
+<body>
+
+<div class="container">
+  <h2>📝 Smart PDF Summarizer</h2>
+  <p class="pdf-name">Using PDF: <b id="pdfName"></b></p>
+
+  <button class="btn" onclick="generateSummary()">✨ Generate Summary</button>
+
+  <div id="keywords"></div>
+  <div id="summary"></div>
+</div>
+
+<button class="back-btn" onclick="window.location.href='dashboard.html'">← Back to Dashboard</button>
+<script>
+const pdfText = localStorage.getItem("studyPDFText");
+const pdfName = localStorage.getItem("studyPDFName");
+
+if (!pdfText) {
+  alert("Upload a PDF first.");
+  window.location.href = "upload.html";
+}
+
+document.getElementById("pdfName").innerText = pdfName;
+
+// Generate Summary
+function generateSummary() {
+  const text = pdfText.replace(/\s+/g, " ").trim();
+  if (!text) {
+    alert("PDF has no readable text!");
+    return;
+  }
+
+  const words = text.toLowerCase().split(/\W+/);
+  const freq = {};
+  words.forEach(w => {
+    if (w.length > 5) freq[w] = (freq[w] || 0) + 1;
+  });
+
+  const topKeywords = Object.entries(freq)
+    .sort((a,b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(x => x[0]);
+
+  document.getElementById("keywords").innerHTML =
+    "<h3>🔑 Key Topics:</h3>• " + topKeywords.join("\n• ");
+
+  const sentences = text.split(/[.!?]/);
+  const scored = sentences.map(s => {
+    let score = 0;
+    topKeywords.forEach(k => {
+      if (s.toLowerCase().includes(k)) score++;
+    });
+    return { s: s.trim(), score };
+  });
+
+  const best = scored
+    .filter(x => x.s.length > 30)
+    .sort((a,b) => b.score - a.score)
+    .slice(0, 5)
+    .map(x => "• " + x.s);
+
+  document.getElementById("summary").innerHTML =
+    "<h3>🧠 Summary:</h3>" + best.join("\n");
+
+  addXP(10, "Generated PDF Summary");
+}
+</script>
+
+
+
+<script src="xpbar.js"></script>
+<script src="emotion.js"></script>
+
+</body>
+</html>
