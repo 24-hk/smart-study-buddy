@@ -41,5 +41,5 @@ This project represents an academic prototype demonstrating full-stack web devel
 
 ## Author
 **Haritha Kalaikovan**  
-MSc Computing & Information Systems, University of Greenwich
+MSc Computing & Information Systems, University of Greenwich.
 
