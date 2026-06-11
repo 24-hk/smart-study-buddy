@@ -1,6 +1,6 @@
 const express   = require('express');
 const router    = express.Router();
-const Flashcard = require('../models/Flashcard');
+const flashcard = require('../models/Flashcard');
 
 // GET /api/flashcards/:userId  — load all flashcards
 router.get('/:userId', async (req, res) => {

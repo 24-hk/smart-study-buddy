@@ -1,6 +1,6 @@
 const express = require('express');
 const router  = express.Router();
-const Quiz    = require('../models/Quiz');
+const quiz    = require('../models/Quiz');
 
 // GET /api/quiz/:userId  — load all quiz results
 router.get('/:userId', async (req, res) => {
