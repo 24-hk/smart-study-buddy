@@ -1,8 +1,7 @@
 const express   = require('express');
 const router    = express.Router();
-const flashcard = require('../models/Flashcard');
+const Flashcard = require('../models/flashcard');
 
-// GET /api/flashcards/:userId  — load all flashcards
 router.get('/:userId', async (req, res) => {
   try {
     const cards = await Flashcard.find({ userId: req.params.userId });
@@ -10,7 +9,6 @@ router.get('/:userId', async (req, res) => {
   } catch { res.status(500).json({ error: 'Something went wrong' }); }
 });
 
-// POST /api/flashcards  — save a new flashcard
 router.post('/', async (req, res) => {
   try {
     const card = new Flashcard(req.body);
@@ -19,7 +17,6 @@ router.post('/', async (req, res) => {
   } catch { res.status(500).json({ error: 'Something went wrong' }); }
 });
 
-// DELETE /api/flashcards/:id  — delete a flashcard
 router.delete('/:id', async (req, res) => {
   try {
     await Flashcard.findByIdAndDelete(req.params.id);

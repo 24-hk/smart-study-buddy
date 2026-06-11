@@ -1,8 +1,7 @@
 const express = require('express');
 const router  = express.Router();
-const quiz    = require('../models/Quiz');
+const Quiz    = require('../models/quiz');
 
-// GET /api/quiz/:userId  — load all quiz results
 router.get('/:userId', async (req, res) => {
   try {
     const quizzes = await Quiz.find({ userId: req.params.userId })
@@ -11,7 +10,6 @@ router.get('/:userId', async (req, res) => {
   } catch { res.status(500).json({ error: 'Something went wrong' }); }
 });
 
-// POST /api/quiz  — save a quiz result
 router.post('/', async (req, res) => {
   try {
     const quiz = new Quiz(req.body);
