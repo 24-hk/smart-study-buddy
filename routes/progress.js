@@ -1,6 +1,6 @@
 const express  = require('express');
 const router   = express.Router();
-const Progress = require('../models/Progress');
+const Progress = require('../models/progress');
 
 // GET /api/progress/:userId  — load a user's progress
 router.get('/:userId', async (req, res) => {
