@@ -2,6 +2,8 @@
 
 Smart Study Buddy is a web-based study support system developed as part of an MSc Computing & Information Systems final year project at the University of Greenwich. The system transforms static academic materials into interactive study tools to improve learning efficiency and engagement.
 
+**Live Demo:** [smart-study-buddy-app.onrender.com](https://smart-study-buddy-app.onrender.com)
+
 ## Problem
 Students often study from static resources such as PDFs and scanned notes, which do not effectively support active learning, revision, or knowledge retention.
 
@@ -19,10 +21,11 @@ The system processes uploaded academic content and automatically generates inter
 
 ## Tech Stack
 - Frontend: HTML, CSS, JavaScript
-- Backend: Node.js
-- Database: MongoDB
+- Backend: Node.js, Express ([`/backend`](backend))
+- Database: MongoDB (via Mongoose)
 - Authentication: Firebase
 - Tools: PDF.js, Tesseract.js (OCR), D3.js
+- Deployment: Render
 
 ## Methodology
 The project was developed using an Agile methodology with iterative sprints, enabling continuous feature refinement, testing, and integration throughout the development lifecycle.
@@ -44,13 +47,30 @@ This project represents an academic prototype demonstrating full-stack web devel
 MSc Computing & Information Systems, University of Greenwich.
 
 ## How to Run
+
+### Frontend
 1. Clone the repository:
    ```
    git clone https://github.com/24-hk/smart-study-buddy.git
    ```
 2. Open the `SMART STUDY BUDDY` folder.
 3. Open `index.html` in your browser (or run it through a local server such as the VS Code "Live Server" extension for full functionality).
-4. Set up your own Firebase project credentials and MongoDB connection details where required by the app's configuration, as these are not included in this repository for security reasons.
+4. Set up your own Firebase project credentials where required by the app's configuration, as these are not included in this repository for security reasons.
+
+### Backend
+1. Open the `backend` folder:
+   ```
+   cd backend
+   npm install
+   ```
+2. Create a `.env` file in the `backend` folder with your own MongoDB connection string:
+   ```
+   MONGO_URI=your_mongodb_connection_string
+   ```
+3. Start the server:
+   ```
+   node server.js
+   ```
 
 ## Screenshots
 
