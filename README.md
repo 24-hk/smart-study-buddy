@@ -1,19 +1,19 @@
 # Smart Study Buddy
 
-Smart Study Buddy is a web-based study support system developed as part of an MSc Computing & Information Systems final year project at the University of Greenwich. The system transforms static academic materials into interactive study tools to improve learning efficiency and engagement.
+Smart Study Buddy is a web-based study support system, built as my final year project for MSc Computing & Information Systems at the University of Greenwich. The idea behind it is simple: take the materials students already have (PDFs, scanned notes, images) and turn them into something more useful for revision, like quizzes, flashcards, and summaries.
 
 **Live Demo:** [smart-study-buddy-app.onrender.com](https://smart-study-buddy-app.onrender.com)
 
 ## Problem
-Students often study from static resources such as PDFs and scanned notes, which do not effectively support active learning, revision, or knowledge retention.
+Most students end up with a pile of PDFs, lecture slides, and scanned notes before exams, but these formats don't really help with active revision. Re-reading the same notes over and over isn't an effective way to retain information.
 
 ## Solution
-The system processes uploaded academic content and automatically generates interactive learning resources including quizzes, flashcards, summaries, concept maps, and a study planner with gamified progress tracking.
+Smart Study Buddy lets you upload your study material and automatically generates quizzes, flashcards, summaries, and concept maps from it. It also includes a study planner and a simple gamification system (XP and levels) to keep track of progress and stay motivated.
 
 ## Key Features
 - PDF and image-based document processing
 - Automatic quiz and flashcard generation
-- Rule-based content summarisation
+- Content summarisation
 - Concept map visualisation
 - Study planner with PDF export
 - Gamification using XP and levels
@@ -27,24 +27,18 @@ The system processes uploaded academic content and automatically generates inter
 - Tools: PDF.js, Tesseract.js (OCR), D3.js
 - Deployment: Render
 
-## Methodology
-The project was developed using an Agile methodology with iterative sprints, enabling continuous feature refinement, testing, and integration throughout the development lifecycle.
+## How It Works
+- **Content Extraction:** Text is pulled from PDFs directly, and from images using OCR (Tesseract.js)
+- **Search & Structuring:** Regex-based pattern matching to clean up and structure the extracted text
+- **Quiz Generation:** Questions and answer options are generated using rule-based logic (no external AI APIs)
+- **Flashcards:** Key terms and definitions are extracted automatically from the source text
+- **Gamification:** XP and levels are calculated based on study activity and progress
 
-## Algorithms
-- **Content Extraction:** Text extraction from PDFs and OCR for image-based documents
-- **Regex-Based Search:** Pattern matching used to clean, structure, and identify key academic content
-- **Quiz Generation:** Rule-based question and distractor creation
-- **Flashcards:** Automatic term-definition extraction
-- **Gamification Logic:** XP-based progress and level unlocking
-
-All algorithms are deterministic and rule-based to ensure transparency and explainability.
-
-## Academic Context
-This project represents an academic prototype demonstrating full-stack web development and rule-based intelligent systems.
+I went with rule-based logic rather than relying on a third-party AI/LLM API, mainly so the project stays self-contained, free to run, and so I could explain exactly how each feature works for my dissertation.
 
 ## Author
 **Haritha Kalaikovan**
-MSc Computing & Information Systems, University of Greenwich.
+MSc Computing & Information Systems, University of Greenwich
 
 ## How to Run
 
