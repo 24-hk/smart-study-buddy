@@ -43,6 +43,15 @@ This project represents an academic prototype demonstrating full-stack web devel
 **Haritha Kalaikovan**
 MSc Computing & Information Systems, University of Greenwich.
 
+## How to Run
+1. Clone the repository:
+   ```
+   git clone https://github.com/24-hk/smart-study-buddy.git
+   ```
+2. Open the `SMART STUDY BUDDY` folder.
+3. Open `index.html` in your browser (or run it through a local server such as the VS Code "Live Server" extension for full functionality).
+4. Set up your own Firebase project credentials and MongoDB connection details where required by the app's configuration, as these are not included in this repository for security reasons.
+
 ## Screenshots
 
 ### Login Page
